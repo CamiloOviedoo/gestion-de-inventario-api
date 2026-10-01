@@ -1,10 +1,8 @@
-📦 Gestión de Inventario API
+Inventory Management API
 
-API REST para la gestión de inventario desarrollada con Python y FastAPI.
+REST API para la gestión de inventario desarrollada con Python y FastAPI, con autenticación mediante JWT, autorización por roles, PostgreSQL, SQLAlchemy, migraciones con Alembic y ejecución mediante Docker.
 
-El proyecto implementa autenticación mediante JWT, autorización basada en roles, gestión de usuarios, categorías y productos, movimientos de stock, historial, paginación, filtros, soft delete, manejo de errores, logging y migraciones de base de datos con Alembic.
-
-La aplicación está preparada para ejecutarse tanto en un entorno local como mediante Docker Compose con PostgreSQL.
+El proyecto está orientado a simular una API backend real para administrar usuarios, categorías, productos y movimientos de stock.
 
 ---
 
@@ -15,288 +13,100 @@ La aplicación está preparada para ejecutarse tanto en un entorno local como me
 - SQLAlchemy
 - Pydantic
 - PostgreSQL
-- SQLite en memoria para tests
-- JWT
-- pwdlib + Argon2
+- JWT / OAuth2
+- Alembic
 - Pytest
+- SQLite para pruebas
 - Docker
 - Docker Compose
-- Alembic
-- Uvicorn
 
 ---
 
-📋 Características
+📋 Funcionalidades
 
-🔐 Autenticación y usuarios
+🔐 Autenticación y autorización
 
-- Registro de usuarios
-- Login mediante OAuth2 Password Flow
-- Autenticación mediante JWT
-- Hash seguro de contraseñas utilizando Argon2
-- Validación de tokens
-- Tokens con fecha de expiración
-- Endpoint "/auth/me"
-- Usuarios activos e inactivos
-- Roles:
+- Registro de usuarios.
+- Login mediante OAuth2 Password Flow.
+- Autenticación mediante tokens JWT.
+- Hash seguro de contraseñas.
+- Validación de tokens.
+- Control de expiración de tokens.
+- Endpoint "/auth/me".
+- Usuarios activos e inactivos.
+- Sistema de roles:
   - "user"
   - "admin"
-- Dependencias para autenticación y autorización
-- Protección de endpoints según rol
+- Protección de endpoints según permisos.
 
-El registro público únicamente permite crear usuarios con:
+📦 Categorías
 
-role=user
+- Crear categorías.
+- Consultar categorías.
+- Actualizar categorías.
+- Eliminación lógica (soft delete).
+- Las categorías desactivadas no aparecen en los listados.
+- Acceso restringido para operaciones administrativas.
 
-No es posible registrarse directamente como administrador.
+🛒 Productos
 
----
+- Crear productos.
+- Consultar productos.
+- Actualizar productos.
+- Eliminación lógica.
+- Validación de precios y stock.
+- Validación de categoría existente y activa.
+- Filtros de búsqueda.
+- Paginación.
+- Control de acceso según rol.
 
-👑 Administrador inicial
+📊 Movimientos de stock
 
-El proyecto incluye un mecanismo para crear automáticamente el administrador inicial.
-
-Script:
-
-app/scripts/create_admin.py
-
-La lógica utiliza el servicio existente:
-
-app/services/admin.py
-
-Las credenciales se proporcionan mediante variables de entorno:
-
-ADMIN_USERNAME=admin
-ADMIN_EMAIL=admin@inventory.local
-ADMIN_PASSWORD=change_this_admin_password
-
-Cuando la aplicación se ejecuta mediante Docker, el "entrypoint.sh" ejecuta:
-
-python -m app.scripts.create_admin
-
-El proceso comprueba si el administrador ya existe antes de crearlo.
-
----
-
-🗂️ Categorías
-
-CRUD completo de categorías.
-
-Incluye:
-
-- Crear categoría
-- Consultar categorías
-- Consultar categoría individual
-- Actualizar categoría
-- Eliminación lógica mediante "is_active"
-- Ocultamiento de categorías eliminadas
-- Protección de operaciones administrativas
-- Validación de categorías activas
-
-Las categorías eliminadas mediante soft delete no aparecen en los listados normales ni pueden consultarse como recursos activos.
-
----
-
-📦 Productos
-
-CRUD completo de productos.
-
-Incluye:
-
-- Crear producto
-- Consultar productos
-- Consultar producto individual
-- Actualizar producto
-- Eliminación lógica
-- Relación con categorías mediante SQLAlchemy
-- Validación de categoría existente y activa
-- Validación de precio
-- Validación de stock
-- Protección de operaciones administrativas
-- Filtros
-- Paginación
-
-Las operaciones de escritura sobre productos requieren permisos de administrador.
-
-El stock no puede modificarse directamente mediante la actualización normal del producto.
-
-Los cambios de stock se realizan mediante movimientos de inventario.
-
----
-
-📊 Paginación y filtros
-
-Los endpoints de consulta permiten trabajar con grandes cantidades de información mediante:
-
-- Paginación
-- Parámetros de consulta
-- Filtros sobre productos
-- Listados únicamente de recursos activos
-
-Esto permite mantener respuestas controladas y facilitar el consumo de la API.
-
----
-
-🔄 Movimientos de stock
-
-El proyecto incorpora un sistema de movimientos de inventario.
-
-Modelo:
-
-StockMovement
-
-Tipos de movimiento:
-
-entrada
-salida
-
-Entrada
-
-Una entrada incrementa el stock del producto.
-
-Salida
-
-Una salida disminuye el stock.
-
-El sistema valida:
-
-- Producto existente
-- Tipo de movimiento válido
-- Cantidad positiva
-- Cantidad diferente de cero
-- Stock suficiente para realizar una salida
-- Usuario autorizado
-
-La creación de movimientos requiere permisos de administrador.
-
----
-
-📜 Historial de movimientos
-
-Los movimientos quedan registrados y pueden consultarse para mantener un historial de las modificaciones de stock.
-
-Esto permite conocer las entradas y salidas realizadas sobre los productos.
-
----
+- Registro de entradas y salidas.
+- Tipos de movimiento mediante "MovementType".
+- Las entradas incrementan el stock.
+- Las salidas disminuyen el stock.
+- Validación de cantidades.
+- Prevención de stock insuficiente.
+- Historial de movimientos por producto.
+- Acceso administrativo para registrar movimientos.
 
 🗄️ Base de datos
 
-En desarrollo y producción mediante Docker se utiliza:
-
-PostgreSQL
-
-Para los tests se utiliza:
-
-SQLite en memoria
-
-La aplicación utiliza:
-
-SQLAlchemy
-
-como ORM.
-
-Las relaciones entre usuarios, categorías, productos y movimientos de stock están definidas mediante modelos SQLAlchemy.
-
----
-
-🔄 Migraciones con Alembic
-
-Las modificaciones del esquema de base de datos se gestionan mediante Alembic.
-
-La migración inicial crea las tablas necesarias para:
-
-user
-category
-product
-stock_movement
-alembic_version
-
-La migración actual se encuentra en:
-
-alembic/versions/
-
-Al iniciar el contenedor de la API, el "entrypoint.sh" ejecuta automáticamente:
-
-alembic upgrade head
-
-Esto permite que las migraciones pendientes se apliquen antes de iniciar FastAPI.
-
----
+- PostgreSQL como base de datos principal.
+- SQLAlchemy como ORM.
+- Relaciones entre entidades.
+- Migraciones administradas mediante Alembic.
+- SQLite en memoria para las pruebas automatizadas.
 
 🐳 Docker
 
-El proyecto incluye:
+El proyecto está preparado para ejecutarse mediante:
 
-- Dockerfile
+- Docker
 - Docker Compose
+- API FastAPI
 - PostgreSQL
-- Entrypoint automático
-- Healthcheck de PostgreSQL
-- Migraciones automáticas
-- Creación automática del administrador inicial
 
-Iniciar el proyecto
+La aplicación y la base de datos se ejecutan como servicios independientes.
 
-docker compose up --build
+🧪 Testing
 
-La API queda disponible en:
+El proyecto cuenta con una suite de pruebas automatizadas utilizando Pytest.
 
-http://localhost:8000
+Estado actual de la suite:
 
-Swagger UI:
+77 passed
 
-http://localhost:8000/docs
-
-ReDoc:
-
-http://localhost:8000/redoc
-
-PostgreSQL se ejecuta dentro de un contenedor independiente.
-
-La API se conecta internamente al servicio PostgreSQL mediante la red de Docker.
+Las pruebas cubren los principales componentes de la aplicación, incluyendo autenticación, autorización, CRUD, validaciones, categorías, productos y movimientos de stock.
 
 ---
 
-🛑 Detener los contenedores
+🏗️ Arquitectura del proyecto
 
-Para detener los servicios:
+La aplicación utiliza una estructura modular separando responsabilidades entre rutas, modelos, esquemas, servicios y dependencias.
 
-docker compose down
-
-Para detenerlos y eliminar también los volúmenes:
-
-docker compose down -v
-
-«"docker compose down -v" elimina los datos persistidos del contenedor de PostgreSQL y debe utilizarse principalmente cuando se quiere comenzar con una base de datos limpia.»
-
----
-
-⚙️ Variables de entorno
-
-La aplicación utiliza variables de entorno para configurar la conexión a la base de datos y la autenticación JWT.
-
-Ejemplo:
-
-DATABASE_URL=postgresql://inventory_user:inventory_password@db:5432/inventory_db
-JWT_SECRET_KEY=your_secret_key_here
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-Para la creación automática del administrador:
-
-ADMIN_USERNAME=admin
-ADMIN_EMAIL=admin@inventory.local
-ADMIN_PASSWORD=change_this_admin_password
-
-El archivo ".env" contiene valores específicos del entorno y no debe subirse al repositorio.
-
-El proyecto incluye ".env.example" como plantilla.
-
----
-
-📁 Estructura del proyecto
-
-gestion de inventario-api/
+gestion-de-inventario-api/
 │
 ├── app/
 │   ├── dependencies/
@@ -320,58 +130,127 @@ gestion de inventario-api/
 │   │   ├── stock_movement.py
 │   │   └── user.py
 │   │
-│   ├── scripts/
-│   │   └── create_admin.py
-│   │
 │   ├── services/
-│   │   ├── admin.py
-│   │   ├── category.py
-│   │   ├── product.py
-│   │   ├── stock_movement.py
-│   │   └── user.py
+│   │   └── ...
 │   │
 │   ├── config.py
 │   ├── database.py
-│   ├── logging.py
 │   └── main.py
 │
 ├── alembic/
 │   ├── versions/
 │   └── env.py
 │
-├── docker/
-│   └── entrypoint.sh
-│
 ├── tests/
-│   ├── test_auth.py
-│   ├── test_categories.py
-│   ├── test_products.py
-│   └── test_stock_movements.py
+│   └── ...
 │
-├── .env.example
-├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yml
+├── entrypoint.sh
 ├── alembic.ini
 ├── requirements.txt
+├── .env.example
+├── .gitignore
 └── README.md
 
 ---
 
-🧪 Tests
+🔑 Seguridad
 
-El proyecto cuenta actualmente con:
+La API utiliza autenticación basada en JWT.
 
-77 tests
+Las contraseñas no se almacenan directamente, sino que se almacenan utilizando hashing seguro.
 
-Los tests utilizan:
+Los endpoints protegidos requieren autenticación y determinadas operaciones administrativas requieren el rol "admin".
 
-pytest
-SQLite en memoria
+El token se obtiene mediante el endpoint de login y posteriormente puede utilizarse desde Swagger mediante el botón Authorize.
 
-Esto permite ejecutar la suite sin depender de una instancia externa de PostgreSQL.
+---
 
-Para ejecutar todos los tests:
+⚙️ Configuración
+
+La aplicación utiliza variables de entorno para la configuración.
+
+Crear un archivo ".env" a partir de ".env.example":
+
+DATABASE_URL=postgresql+psycopg://inventory_user:inventory_password@db:5432/inventory_db
+
+JWT_SECRET_KEY=your-secret-key
+
+JWT_ALGORITHM=HS256
+
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+«No se debe subir el archivo ".env" al repositorio.»
+
+---
+
+🐳 Ejecución con Docker
+
+1. Clonar el repositorio
+
+git clone <URL_DEL_REPOSITORIO>
+cd gestion-de-inventario-api
+
+2. Configurar las variables de entorno
+
+Crear el archivo ".env" utilizando ".env.example" como referencia.
+
+3. Construir y ejecutar los servicios
+
+docker compose up --build
+
+La API estará disponible en:
+
+http://localhost:8000
+
+4. Swagger
+
+La documentación interactiva estará disponible en:
+
+http://localhost:8000/docs
+
+También está disponible la documentación alternativa de OpenAPI:
+
+http://localhost:8000/redoc
+
+5. Detener los servicios
+
+docker compose down
+
+Para detener los servicios y eliminar también los volúmenes:
+
+docker compose down -v
+
+«"-v" elimina los datos persistidos de PostgreSQL, por lo que debe utilizarse con precaución.»
+
+---
+
+🗃️ Migraciones con Alembic
+
+Las modificaciones del esquema de la base de datos se administran mediante Alembic.
+
+Para ejecutar las migraciones:
+
+alembic upgrade head
+
+Para comprobar la versión actual:
+
+alembic current
+
+Para crear una nueva migración después de modificar los modelos:
+
+alembic revision --autogenerate -m "descripcion del cambio"
+
+---
+
+🧪 Ejecutar las pruebas
+
+Instalar las dependencias:
+
+pip install -r requirements.txt
+
+Ejecutar la suite:
 
 pytest -v
 
@@ -379,185 +258,129 @@ Resultado actual:
 
 77 passed
 
-La suite cubre principalmente:
-
-- Registro y usuarios
-- Hash de contraseñas
-- Autenticación
-- JWT
-- Tokens expirados
-- Autorización
-- Roles
-- Usuarios inactivos
-- Categorías
-- Soft delete
-- Productos
-- Validaciones
-- Paginación y filtros
-- Movimientos de stock
-- Control de stock
-- Historial de movimientos
+Las pruebas utilizan una base SQLite en memoria para evitar depender de una instancia externa de PostgreSQL durante la ejecución de la suite.
 
 ---
 
-🔑 Swagger / OpenAPI
+📚 Documentación de la API
 
-FastAPI genera automáticamente la documentación interactiva.
+FastAPI genera automáticamente documentación OpenAPI.
 
-Swagger UI:
+Swagger UI
 
 http://localhost:8000/docs
 
-ReDoc:
+ReDoc
 
 http://localhost:8000/redoc
 
-El login utiliza OAuth2 Password Flow y permite utilizar el botón Authorize de Swagger para probar endpoints protegidos.
+Desde Swagger es posible autenticarse mediante Authorize y probar los endpoints protegidos.
 
 ---
 
-🛡️ Seguridad
+🧩 Principales endpoints
 
-El proyecto implementa:
+Authentication
 
-- JWT
-- Expiración de tokens
-- Hash de contraseñas mediante Argon2
-- Autenticación basada en OAuth2
-- Control de acceso por roles
-- Usuarios activos/inactivos
-- Variables sensibles mediante ".env"
-- Separación entre usuarios normales y administradores
+POST /auth/register
+POST /auth/login
+GET  /auth/me
 
-Los secretos y credenciales específicas del entorno no deben almacenarse en el repositorio.
+Categories
 
----
+GET    /categories
+GET    /categories/{category_id}
+POST   /categories
+PUT    /categories/{category_id}
+DELETE /categories/{category_id}
 
-📝 Manejo de errores
+Products
 
-La API incorpora manejo de errores HTTP y validaciones para evitar operaciones inválidas.
+GET    /products
+GET    /products/{product_id}
+POST   /products
+PUT    /products/{product_id}
+DELETE /products/{product_id}
 
-Entre otros casos se controlan:
+Stock movements
 
-- Recursos inexistentes
-- Usuarios duplicados
-- Categorías inexistentes
-- Categorías inactivas
-- Productos inexistentes
-- Productos inactivos
-- Stock insuficiente
-- Cantidades inválidas
-- Tipos de movimiento inválidos
-- Usuarios sin permisos
-- Tokens inválidos o expirados
+POST /stock-movement
+GET  /stock-movement
+GET  /stock-movement/{movement_id}
+
+«Las operaciones protegidas requieren autenticación y, dependiendo del endpoint, permisos de administrador.»
 
 ---
 
-🪵 Logging
+🔄 Gestión de stock
 
-La aplicación incorpora logging para facilitar el seguimiento y diagnóstico de eventos relevantes de la API.
+Los movimientos de inventario utilizan dos tipos principales:
 
----
+ENTRADA
+SALIDA
 
-🔧 Configuración
+Una entrada incrementa el stock disponible:
 
-La configuración de la aplicación se centraliza en:
+stock actual + cantidad
 
-app/config.py
+Una salida disminuye el stock:
 
-Se utilizan variables de entorno para evitar almacenar directamente en el código valores específicos del entorno.
+stock actual - cantidad
 
----
+La API valida que la cantidad sea válida y que exista stock suficiente antes de realizar una salida.
 
-🚀 Ejecución local
-
-Crear y activar un entorno virtual:
-
-Windows
-
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-Instalar dependencias:
-
-pip install -r requirements.txt
-
-Configurar las variables de entorno utilizando:
-
-.env.example
-
-y crear el archivo:
-
-.env
-
-Luego iniciar la aplicación:
-
-uvicorn app.main:app --reload
-
-La API estará disponible en:
-
-http://localhost:8000
+Además, cada movimiento queda registrado para conservar el historial de operaciones.
 
 ---
 
-🐳 Ejecución con Docker
+🧠 Validaciones y manejo de errores
 
-Para ejecutar todo el entorno mediante Docker:
+La API incorpora validaciones para evitar datos inconsistentes, incluyendo:
 
-docker compose up --build
+- Precios negativos.
+- Stock negativo.
+- Cantidades de movimientos inválidas.
+- Salidas superiores al stock disponible.
+- Categorías inexistentes.
+- Categorías inactivas.
+- Usuarios duplicados.
+- Emails duplicados.
+- Usuarios inactivos.
+- Tokens inválidos o expirados.
+- Acceso a recursos eliminados lógicamente.
+- Operaciones sin los permisos necesarios.
 
-El flujo de inicio es:
-
-PostgreSQL
-    ↓
-Healthcheck
-    ↓
-entrypoint.sh
-    ↓
-Alembic
-    ↓
-Creación del administrador inicial
-    ↓
-FastAPI / Uvicorn
+Los errores se gestionan mediante respuestas HTTP apropiadas y mensajes descriptivos.
 
 ---
 
-📌 Estado del proyecto
+📝 Soft Delete
 
-El proyecto se encuentra actualmente funcional y preparado como proyecto de portfolio.
+Las categorías y productos utilizan eliminación lógica.
 
-Implementado
+En lugar de eliminar físicamente el registro de la base de datos, se modifica su estado mediante un campo de activación.
 
-- [x] FastAPI
-- [x] SQLAlchemy
-- [x] Pydantic
-- [x] PostgreSQL
-- [x] SQLite para tests
-- [x] Autenticación JWT
-- [x] OAuth2 Password Flow
-- [x] Hash de contraseñas con Argon2
-- [x] Usuarios
-- [x] Roles
-- [x] Autorización
-- [x] Categorías
-- [x] Productos
-- [x] Soft delete
-- [x] Paginación
-- [x] Filtros
-- [x] Movimientos de stock
-- [x] Historial de movimientos
-- [x] Manejo de errores
-- [x] Logging
-- [x] Variables de entorno
-- [x] Docker
-- [x] Docker Compose
-- [x] Alembic
-- [x] Administrador inicial automático
-- [x] Tests automatizados
-- [x] Documentación Swagger/OpenAPI
+Esto permite:
+
+- conservar la información histórica;
+- evitar perder relaciones existentes;
+- ocultar recursos eliminados de los listados;
+- mantener consistencia en el historial.
 
 ---
 
 📄 Licencia
 
-Este proyecto fue desarrollado como proyecto de portfolio.
+Este proyecto fue desarrollado como proyecto de portfolio para demostrar conocimientos de desarrollo backend con Python, FastAPI, bases de datos relacionales, autenticación, testing, Docker y migraciones.
+
+---
+
+👨‍💻 Proyecto
+
+Inventory Management API
+
+Backend REST desarrollado con:
+
+Python · FastAPI · PostgreSQL · SQLAlchemy · JWT · Alembic · Pytest · Docker
+
+El proyecto demuestra la implementación de una API backend modular con autenticación, autorización, persistencia de datos, validaciones, gestión de inventario, testing automatizado y entorno reproducible mediante Docker.
