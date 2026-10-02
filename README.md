@@ -106,45 +106,36 @@ Las pruebas cubren los principales componentes de la aplicación, incluyendo aut
 
 La aplicación utiliza una estructura modular separando responsabilidades entre rutas, modelos, esquemas, servicios y dependencias.
 
-'''text
+```text
 gestion-de-inventario-api/
-│
 ├── app/
 │   ├── dependencies/
 │   │   └── auth.py
-│   │
 │   ├── models/
 │   │   ├── category.py
 │   │   ├── product.py
 │   │   ├── stock_movement.py
 │   │   └── user.py
-│   │
 │   ├── routes/
 │   │   ├── auth.py
 │   │   ├── category.py
 │   │   ├── product.py
 │   │   └── stock_movement.py
-│   │
 │   ├── schemas/
 │   │   ├── category.py
 │   │   ├── product.py
 │   │   ├── stock_movement.py
 │   │   └── user.py
-│   │
 │   ├── services/
 │   │   └── ...
-│   │
 │   ├── config.py
 │   ├── database.py
 │   └── main.py
-│
 ├── alembic/
 │   ├── versions/
 │   └── env.py
-│
 ├── tests/
 │   └── ...
-│
 ├── Dockerfile
 ├── docker-compose.yml
 ├── entrypoint.sh
@@ -153,7 +144,7 @@ gestion-de-inventario-api/
 ├── .env.example
 ├── .gitignore
 └── README.md
-'''
+```
 ---
 
 🔑 Seguridad
