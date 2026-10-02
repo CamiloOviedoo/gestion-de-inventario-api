@@ -106,6 +106,7 @@ Las pruebas cubren los principales componentes de la aplicación, incluyendo aut
 
 La aplicación utiliza una estructura modular separando responsabilidades entre rutas, modelos, esquemas, servicios y dependencias.
 
+'''text
 gestion-de-inventario-api/
 │
 ├── app/
@@ -152,7 +153,7 @@ gestion-de-inventario-api/
 ├── .env.example
 ├── .gitignore
 └── README.md
-
+'''
 ---
 
 🔑 Seguridad
